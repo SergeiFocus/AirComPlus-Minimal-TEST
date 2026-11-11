@@ -1,7 +1,7 @@
 # AirComPlus-Minimal Integration Report
 
 Date: 2026-11-11  
-Status: **GO for the requested test build** (not a production release)
+Status: **HOLD / NO-GO for MSL correctness in ordinary GPS mode** (Mock conversion and BARO behavior remain separately verified)
 
 ## Source and isolation
 
@@ -42,10 +42,14 @@ Tested on the dedicated `AirComPlus_Minimal_API37_Test` AVD, Android API 37. No 
 
 ## GO decision and limits
 
-All five requested AVD scenarios have been observed successfully across the isolated API 37 test runs, and the final signed APK was verified and installed byte-for-byte on the AVD. **GO is granted for this test build for review and further non-flight testing.** This is not approval for flight use or a production release.
+The original five AVD scenarios were observed and the signed APK was verified byte-for-byte on the AVD. A follow-up ordinary-GPS altitude check found that a non-Mock Android `Location` with WGS84 altitude 250 m is displayed as 250 m without conversion. **The prior GO is withdrawn for MSL correctness in ordinary GPS mode.** The build remains available for source-priority and BARO review only; do not treat its ordinary GPS altitude as MSL. This is not a production or flight release.
 
 The emulator's virtual pressure sensor remained at 1013 hPa, so this verifies preservation of the QNH/QNE BARO path when Mock is active, not real-world pressure accuracy. No flight testing was performed.
 
 ## Follow-up QNH selection check
 
 After the integration matrix, with no Mock active on the same API 37 AVD, the QNH panel started at 1013 hPa and 0 m. Increasing QNH to 1020 hPa changed the displayed barometric altitude to 58 m. Selecting GPS showed a GPS altitude of 5 m; returning to QNH restored the 1020 hPa setting and 58 m barometric altitude. The selector outline tracked GPS → QNH → GPS → QNH. Evidence: `evidence/qnh_start.png`, `evidence/qnh_selected.png`, `evidence/qnh_1020.png`, `evidence/gps_after_qnh1020.png`, and `evidence/qnh_returned.png`. This confirms the selector and QNH setting persist across the tested mode changes on this AVD.
+
+## Follow-up ordinary GPS altitude datum audit
+
+On the API 37 AVD with no Mock active and GPS altitude selected, an ordinary emulator GPS fix at 37.4287, -122.0882 with `geo fix` altitude 250 m was accepted as `mock=false`; the UI displayed 250 m exactly. Evidence: `evidence/altitude_logic_stock_gps.png`. Static tracing confirms that only marked Mock GPS enters the `AltitudeConverter` path. Ordinary GPS falls through to `LocationWrapper.getAltitude()`, which Android documents as height above the WGS84 reference ellipsoid. Therefore ordinary GPS altitude is currently shown as ellipsoidal height rather than MSL. The earlier GPS-without-Mock scenario verified callback fallback only and did not verify the altitude datum. **MSL correctness for ordinary GPS is NO-GO pending a conversion fix and a new validation build.**
