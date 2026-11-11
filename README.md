@@ -1,5 +1,7 @@
 # AirComPlus Minimal — TEST build
 
+> **Altitude datum caveat (2026-11-11):** follow-up validation showed that ordinary, non-Mock GPS `Location.getAltitude()` is displayed without WGS84-to-MSL conversion. This build is **NO-GO as MSL-correct for ordinary GPS altitude**. The Mock GPS conversion path and BARO behavior were checked separately.
+
 Temporary public download page for the isolated AirComPlus-Minimal test build.
 
 ## Download
